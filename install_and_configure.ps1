@@ -339,6 +339,13 @@ pref(`"media.navigator.mediadatadecoder_vpx_enabled`",true);
 pref(`"image.webp`",false);
 pref(`"browser.download.viewableInternally.typeWasRegistered.webp`",false);
 pref(`"drm`",true);
+pref(`"sidebar.visibility`", `"hide-sidebar`");
+pref(`"sidebar.revamp`", false);
+pref(`"signon.rememberSignons`", false);
+pref(`"browser.translations.automaticallyPopup`", false);
+pref(`"browser.startup.page`", 3);
+pref(`"browser.shell.checkDefaultBrowser`", true);
+pref(`"browser.uiCustomization.state`", '{`"placements`":{`"widget-overflow-fixed-list`":[],`"unified-extensions-area`":[`"jid1-mnnxcxisbpnsxq_jetpack-browser-action`",`"newtaboverride_agenedia_com-browser-action`",`"gmailellcheckersimple_durasoft-browser-action`",`"dontfuckwithpaste_raim_ist-browser-action`",`"gdpr_cavi_au_dk-browser-action`",`"chrome-gnome-shell_gnome_org-browser-action`",`"netflixprime_autoskip_io-browser-action`",`"plasma-browser-integration_kde_org-browser-action`",`"support_netflux_me-browser-action`",`"_a6c4a591-f1b2-4f03-b3ff-767e5bedf4e7_-browser-action`",`"_74145f27-f039-47ce-a470-a662b129930a_-browser-action`"],`"nav-bar`":[`"back-button`",`"forward-button`",`"stop-reload-button`",`"vertical-spacer`",`"home-button`",`"new-tab-button`",`"urlbar-container`",`"downloads-button`",`"history-panelmenu`",`"print-button`",`"preferences-button`",`"unified-extensions-button`",`"ublock0_raymondhill_net-browser-action`",`"78272b6fa58f4a1abaac99321d503a20_proton_me-browser-action`"],`"toolbar-menubar`":[`"menubar-items`"],`"TabsToolbar`":[`"firefox-view-button`",`"tabbrowser-tabs`",`"alltabs-button`"],`"vertical-tabs`":[],`"PersonalToolbar`":[`"import-button`",`"personal-bookmarks`"]},`"seen`":[`"developer-button`",`"screenshot-button`",`"gmailellcheckersimple_durasoft-browser-action`",`"newtaboverride_agenedia_com-browser-action`",`"dontfuckwithpaste_raim_ist-browser-action`",`"gdpr_cavi_au_dk-browser-action`",`"chrome-gnome-shell_gnome_org-browser-action`",`"netflixprime_autoskip_io-browser-action`",`"plasma-browser-integration_kde_org-browser-action`",`"support_netflux_me-browser-action`",`"_a6c4a591-f1b2-4f03-b3ff-767e5bedf4e7_-browser-action`",`"_74145f27-f039-47ce-a470-a662b129930a_-browser-action`",`"jid1-mnnxcxisbpnsxq_jetpack-browser-action`",`"ublock0_raymondhill_net-browser-action`",`"78272b6fa58f4a1abaac99321d503a20_proton_me-browser-action`"],`"dirtyAreaCache`":[`"nav-bar`",`"vertical-tabs`",`"PersonalToolbar`",`"unified-extensions-area`",`"TabsToolbar`"],`"currentVersion`":23,`"newElementCount`":3}');
 "@
 
 $FILE="$PATH/firefox.cfg"
