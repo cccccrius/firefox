@@ -1,5 +1,5 @@
 #on vérifie si firefox est installé, sinon on l'installe, puis on le configure
-#script pour firefox portable, à mettre à côté de firefox portable.exe
+#script pour firefox portable, crée aussi le fichier firefoxportable.ini
 
 write-host " ==========================="
 write-host " | FIREFOX CONFIGURATOR V1 |"
@@ -443,6 +443,32 @@ $STRING = @'
 
 $FILE="$PATH/distribution/policies.json"
 [System.IO.File]::WriteAllLines($FILE, $STRING, $Utf8NoBomEncoding)
+
+$STRING = @'
+[FirefoxPortable]
+FirefoxDirectory=App\Firefox
+ProfileDirectory=Data\profile
+SettingsDirectory=Data\settings
+PluginsDirectory=Data\plugins
+FirefoxExecutable=firefox.exe
+AdditionalParameters=
+LocalHomepage=
+DisableSplashScreen=true
+AllowMultipleInstances=true
+DisableIntelligentStart=false
+SkipCompregFix=false
+RunLocally=false
+AlwaysUse32Bit=false
+DisableOSCheck=false
+
+# The above options are explained in the included readme.txt
+# This INI file is an example only and is not used unless it is placed as described in the included readme.txt
+'@
+
+$FILE="$scriptDir\FirefoxPortable.ini"
+[System.IO.File]::WriteAllLines($FILE, $STRING, $Utf8NoBomEncoding)
+
+
 
 write-host "`nFirefox est prêt, vous pouvez le lancer.`n"
 
