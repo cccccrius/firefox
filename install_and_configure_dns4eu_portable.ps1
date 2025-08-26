@@ -1,24 +1,8 @@
-#on vérifie si firefox est installé, sinon on l'installe, puis on le configure
-#script pour firefox portable, crée aussi le fichier firefoxportable.ini
+#script à placer à côté de firefoxportable.exe, qui va configurer options, UI et extensions
 
 write-host " ==========================="
 write-host " | FIREFOX CONFIGURATOR V1 |"
 write-host " ==========================="
-
-#Redémarrer powershell en x64 - correctif de bug avec NSIS. A enlever/commenter si converti en exe avec ps2exe
-If (!([Environment]::Is64BitProcess)){
-    if([Environment]::Is64BitOperatingSystem){
-        Write-Output "Running 32 bit Powershell on 64 bit OS, restarting as 64 bit process..."
-        #$arguments = "-NoProfile -ExecutionPolicy ByPass -WindowStyle Hidden -File `"" + $myinvocation.mycommand.definition + "`""
-        $arguments = "-NoProfile -ExecutionPolicy ByPass -File `"" + $myinvocation.mycommand.definition + "`""
-        $path = (Join-Path $Env:SystemRoot -ChildPath "\sysnative\WindowsPowerShell\v1.0\powershell.exe")
-        Start-Process $path -ArgumentList $arguments -wait
-        Write-Output "finished x64 version of PS"
-        Exit
-    }else{
-        Write-Output "Running 32 bit Powershell on 32 bit OS"
-    }
-}
 
 #Auto-élévation du script si lancé en non-admin. A enlever/commenter si converti en exe avec ps2exe
 if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
@@ -43,7 +27,7 @@ $DNSR1="1.1.1.3"
 $DNST0="ADULTE"
 $DNST1="ENFANT"
 
-#creation variable $scriptDir
+#création variable $scriptDir
 if ($MyInvocation.MyCommand.CommandType -eq "ExternalScript")
 { $ScriptPath = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition }
 else
@@ -88,197 +72,16 @@ switch ($type)
 $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
 
 #récupération du dossier de Firefox
-$PATH="$scriptDir\App\Firefox64"
+$PATH="$scriptDir/App/Firefox64/"
 
-#fonction de téléchargement
-function Get-FileFromWeb {
-    param (
-        # Parameter help description
-        [Parameter(Mandatory)]
-        [string]$URL,
-  
-        # Parameter help description
-        [Parameter(Mandatory)]
-        [string]$File 
-    )
-    Begin {
-        function Show-Progress {
-            param (
-                # Enter total value
-                [Parameter(Mandatory)]
-                [Single]$TotalValue,
-        
-                # Enter current value
-                [Parameter(Mandatory)]
-                [Single]$CurrentValue,
-        
-                # Enter custom progresstext
-                [Parameter(Mandatory)]
-                [string]$ProgressText,
-        
-                # Enter value suffix
-                [Parameter()]
-                [string]$ValueSuffix,
-        
-                # Enter bar lengh suffix
-                [Parameter()]
-                [int]$BarSize = 40,
-
-                # show complete bar
-                [Parameter()]
-                [switch]$Complete
-            )
-            
-            # calc %
-            $percent = $CurrentValue / $TotalValue
-            $percentComplete = $percent * 100
-            if ($ValueSuffix) {
-                $ValueSuffix = " $ValueSuffix" # add space in front
-            }
-            if ($psISE) {
-                Write-Progress "$ProgressText $CurrentValue$ValueSuffix de $TotalValue$ValueSuffix" -id 0 -percentComplete $percentComplete            
-            }
-            else {
-                # build progressbar with string function
-                $curBarSize = $BarSize * $percent
-                $progbar = ""
-                $progbar = $progbar.PadRight($curBarSize,[char]9608)
-                $progbar = $progbar.PadRight($BarSize,[char]9617)
-        
-                if (!$Complete.IsPresent) {
-                    Write-Host -NoNewLine "`r$ProgressText $progbar [ $($CurrentValue.ToString("#.###").PadLeft($TotalValue.ToString("#.###").Length))$ValueSuffix / $($TotalValue.ToString("#.###"))$ValueSuffix ] $($percentComplete.ToString("##0.00").PadLeft(6)) % effectués"
-                }
-                else {
-                    Write-Host -NoNewLine "`r$ProgressText $progbar [ $($TotalValue.ToString("#.###").PadLeft($TotalValue.ToString("#.###").Length))$ValueSuffix / $($TotalValue.ToString("#.###"))$ValueSuffix ] $($percentComplete.ToString("##0.00").PadLeft(6)) % effectués"                    
-                }                
-            }   
-        }
-    }
-    Process {
-        try {
-            $storeEAP = $ErrorActionPreference
-            $ErrorActionPreference = 'Stop'
-        
-            # invoke request
-            $request = [System.Net.HttpWebRequest]::Create($URL)
-            $response = $request.GetResponse()
-  
-            if ($response.StatusCode -eq 401 -or $response.StatusCode -eq 403 -or $response.StatusCode -eq 404) {
-                throw "Remote file either doesn't exist, is unauthorized, or is forbidden for '$URL'."
-            }
-  
-            if($File -match '^\.\\') {
-                $File = Join-Path (Get-Location -PSProvider "FileSystem") ($File -Split '^\.')[1]
-            }
-            
-            if($File -and !(Split-Path $File)) {
-                $File = Join-Path (Get-Location -PSProvider "FileSystem") $File
-            }
-
-            if ($File) {
-                $fileDirectory = $([System.IO.Path]::GetDirectoryName($File))
-                if (!(Test-Path($fileDirectory))) {
-                    [System.IO.Directory]::CreateDirectory($fileDirectory) | Out-Null
-                }
-            }
-
-            [long]$fullSize = $response.ContentLength
-            $fullSizeMB = $fullSize / 1024 / 1024
-  
-            # define buffer
-            [byte[]]$buffer = new-object byte[] 1048576
-            [long]$total = [long]$count = 0
-  
-            # create reader / writer
-            $reader = $response.GetResponseStream()
-            $writer = new-object System.IO.FileStream $File, "Create"
-  
-            # start download
-            $finalBarCount = 0 #show final bar only one time
-            do {
-          
-                $count = $reader.Read($buffer, 0, $buffer.Length)
-          
-                $writer.Write($buffer, 0, $count)
-              
-                $total += $count
-                $totalMB = $total / 1024 / 1024
-          
-                if ($fullSize -gt 0) {
-                    Show-Progress -TotalValue $fullSizeMB -CurrentValue $totalMB -ProgressText "Téléchargement: $($File.Name)" -ValueSuffix "MB"
-                }
-
-                if ($total -eq $fullSize -and $count -eq 0 -and $finalBarCount -eq 0) {
-                    Show-Progress -TotalValue $fullSizeMB -CurrentValue $totalMB -ProgressText "Téléchargement: $($File.Name)" -ValueSuffix "MB" -Complete
-                    $finalBarCount++
-                    #Write-Host "$finalBarCount"
-                }
-
-            } while ($count -gt 0)
-            write-host "`n"
-        }
-  
-        catch {
-        
-            $ExeptionMsg = $_.Exception.Message
-            Write-Host "Download breaks with error : $ExeptionMsg"
-        }
-  
-        finally {
-            # cleanup
-            if ($reader) { $reader.Close() }
-            if ($writer) { $writer.Flush(); $writer.Close() }
-        
-            $ErrorActionPreference = $storeEAP
-            [GC]::Collect()
-        }    
-    }
-}
-
-if([string]::IsNullOrEmpty($PATH)) {
-
-    write-host "`n`nFirefox n'est pas installé`n"
-	
-    #fichier local ou sauvegarder l'installeur
-    $LOCFILE="$PSSCRIPTROOT\firefox_setup_fr.msi"
-
-    #on supprime l'installeur s'il a plus de 30 jours
-    Get-ChildItem "$PSSCRIPTROOT" -Recurse -File -Filter "firefox_setup_fr.msi" | Where CreationTime -lt (Get-Date).AddDays(-30)  | Remove-Item -Force
-    
-    #url pour le dernier installeur firefox, format exe
-    #$URL="https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=fr"
-    
-    #url pour le dernier installeur firefox, format msi
-    $URL="https://download.mozilla.org/?product=firefox-msi-latest-ssl&os=win64&lang=fr"
-
-    if (!(Test-Path $LOCFILE)) {
-
-	    #pas d'installeur disponible à côté du script, on le télécharge
-        write-host "`nL'installeur de Firefox n'est pas présent, téléchargement depuis`n$URL`n`n"
-
-        #Invoke-WebRequest $URL -OutFile $LOCFILE
-        Get-FileFromWeb $URL $LOCFILE
-    }
-
-    write-host "`nInstallation de Firefox`n"
-
-    Start-Process Msiexec.exe -Wait -ArgumentList "/i $LOCFILE /qn"
-}
-else {
-
-    write-host "`nFirefox est déjà installé`n"
-
-}
-
-$PATH=(Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall, HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall | Get-ItemProperty | Where-Object {$_.DisplayName -match "firefox" } | Select-Object -Property DisplayName, InstallLocation).InstallLocation
-
-write-host "`nNettoyage de la configuration de Firefox`n"
+write-host "`nNettoyage de la configuration de Firefox"
 
 remove-item $PATH/defaults/pref/autoconfig.js -force
 remove-item $PATH/distribution/policies.json -force
 remove-item $PATH/firefox.cfg -force
 
-write-host "`nConfiguration de Firefox en mode [$DNST]`n"
+write-host "`nConfiguration de Firefox en mode [$DNST]"
+
 New-Item -ItemType Directory -Path $PATH/defaults/pref -force > $null
 New-Item -ItemType Directory -Path $PATH/distribution -force > $null
 
@@ -470,6 +273,6 @@ $FILE="$scriptDir\FirefoxPortable.ini"
 
 
 
-write-host "`nFirefox est prêt, vous pouvez le lancer.`n"
+write-host "`nFirefox portable est prêt, vous pouvez le lancer."
 
 Timeout /T 5
